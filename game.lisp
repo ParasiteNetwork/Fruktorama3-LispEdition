@@ -595,11 +595,16 @@
                                             (grid-effective-x x (widget-x game))
                                             (grid-effective-y y (widget-y game))))))))
 
+(defparameter *NEW-GAME-DELAY-MS* (glas:milliseconds 500))
+(defparameter *PLAY-DELAY-MS* (glas:milliseconds 1000))
+(defparameter *DROP-DELAY-MS* (glas:milliseconds 200))
+(defparameter *REAP-DELAY-MS* (glas:milliseconds 500))
+
 (defun update-game (game tick)
   "new      -> play | gameover
    play     -> place
-   drop     -> delay
-   delay    -> place
+   drop     -> drop-delay
+   drop-delay    -> place
    place    -> harvest
    harvest  -> new | reap
    reap     -> harvest
@@ -617,7 +622,7 @@
                  (tick% tick)) game
                 (ecase (game-widget-status game)
                        (:new
-                         (delay (game 500 tick)
+                         (delay (game *NEW-GAME-DELAY-MS* tick)
                                 (format t "~%~A~%" grid%)
                                 (set-state status% :play)
                                 (if (spawn-new-fruits game)
@@ -626,7 +631,7 @@
                                       (setf highlight% (grid-blokks grid%))
                                       (set-state status% :gameover)))))
                        (:play
-                         (delay (game 1000 tick)
+                         (delay (game *PLAY-DELAY-MS* tick)
                                 (if (move-blokks grid% 0 1)
                                     (add-game-score game 1)
                                     (set-state status% :place))))
@@ -634,7 +639,7 @@
                          (setf tick% tick) 
                          (let ((dropped (drop-3-blokks grid%)))
                            (add-game-score game dropped))
-                         (set-state status% :delay))
+                         (set-state status% :drop-delay))
                        (:place
                          (place-blokks grid%)
                          (set-state status% :harvest))
@@ -646,14 +651,14 @@
                                (set-state status% :reap))
                              (set-state status% :new)))
                        (:reap
-                         (delay (game 500 tick)
+                         (delay (game *REAP-DELAY-MS* tick)
                                 (add-game-score game (* (length highlight%) 10))
                                 (create-fruit-particles game highlight%)
                                 (setf highlight% nil)
                                 (reap grid%)
                                 (set-state status% :harvest))) ;; does not place!
-                       (:delay
-                         (delay (game 200 tick)
+                       (:drop-delay
+                         (delay (game *DROP-DELAY-MS* tick)
                                 (set-state status% :place)))
                        (:gameover
                          (set-state status% :dead)

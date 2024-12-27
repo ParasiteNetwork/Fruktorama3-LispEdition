@@ -454,6 +454,7 @@
                  t))))
 
 (defun particle-field-add (field particle)
+	(check-type particle sprite-descriptor)
   (push particle (particle-field-widget-particles field)))
 
 (defun remove-all-particles (widget)
@@ -466,14 +467,17 @@
         (push particle particles)))
     (setf (particle-field-widget-particles widget) (reverse particles))))
 
+; DO PARTICLES MOVE WHILE PAUSED?
 (defmethod widget-event-handle ((widget particle-field-widget) event payload)
   (format t "Event ~A with payload:~%~A~%" event payload)
   (when (eq event :ADD-PARTICLE)
     (when (eq (type-of payload) 'SPRITE-DESCRIPTOR)
+    	(format t "Added particle to field~%")
       (particle-field-add widget payload))))
 
 (defmethod widget-event-paint ((w particle-field-widget) renderer tick)
   (dolist (particle (particle-field-widget-particles w))
+  	;(format t "~%XPaint particle: ~A~%" particle))) ; CAN'T PRINT ANIMATION
     (paint-sprite particle renderer tick))
   (strip-dead-particles w))
 
@@ -521,14 +525,17 @@
 (defmethod widget-event-open ((w star-rain-widget))
   (remove-all-particles (star-rain-widget-field w)))
 
+(defparameter *NEW-STAR-MINIMUM-TICK-MS* (glas:milliseconds 20))
+(defparameter *PAUSE-BETWEEN-STARS-MS* (glas:milliseconds 250))
+
 (defmethod widget-event-paint :after ((w star-rain-widget) renderer tick)
-  (when (> (- tick (star-rain-widget-tick w)) 20)
+  (when (> (- tick (star-rain-widget-tick w)) *NEW-STAR-MINIMUM-TICK-MS*)
     (setf (star-rain-widget-tick w) tick)
     (with-slots ((dice% dice)) w
                 (let ((n (car dice%)))
                   (setf dice% (cdr dice%))
                   (when (>= n 14)
-                    (incf (star-rain-widget-tick w) 250)
+                    (incf (star-rain-widget-tick w) *PAUSE-BETWEEN-STARS-MS*)
                     (add-star w))
                   (setf dice% (alexandria:shuffle (copy-list *T3*)))))))
 
@@ -538,8 +545,10 @@
 
 (defun make-star-particle (widget)
   (let ((particle (%new-star-particle)))
-    (initialize-star-particle widget particle)
-    particle))
+    (initialize-star-particle widget particle)))
+    ; particle))
+
+(defparameter *STAR-SWING-SPEED-MS* (glas:milliseconds 1000))
 
 (defun initialize-star-particle (widget particle)
   (let ((particle2 (initialize-sprite particle
@@ -553,7 +562,7 @@
                                      :transform-x (lambda (sprite x tickstart ticknow tickdiff)
                                                     (+ (sprite-x sprite)
                                                        (floor (* (* 50 (star-particle-rotation sprite))
-                                                                 (sin (/ ticknow 1000.0)))))))))
+                                                                 (sin (/ ticknow *STAR-SWING-SPEED-MS*)))))))))
     particle2))
 
 (defun add-star (widget)

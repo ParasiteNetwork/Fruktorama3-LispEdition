@@ -30,7 +30,7 @@
                  (:ystar2 1 0)
                  (:ystar3 2 0)
                  (:ystar4 3 0)))
-  (defanimation (list 50 50 50 50) (list :ystar1 :ystar2 :ystar3 :ystar4) :yellow-star)
+  (defanimation (list 50000 50000 50000 50000) (list :ystar1 :ystar2 :ystar3 :ystar4) :yellow-star)
   
   (defresource "graphics/star2.png" renderer
                '(50 50
@@ -38,7 +38,7 @@
                  (:rstar2 1 0)
                  (:rstar3 2 0)
                  (:rstar4 3 0)))
-  (defanimation (list 50 50 50 50) (list :rstar1 :rstar2 :rstar3 :rstar4) :red-star)
+  (defanimation (list 50000 50000 50000 50000) (list :rstar1 :rstar2 :rstar3 :rstar4) :red-star)
   
   (defcharmap "graphics/black-large-alfabet.png" renderer :black-large-alfabet 27 40 10 42
               :translator '((#\A 0)(#\B 1)(#\C 2)(#\D 3)(#\E 4)
